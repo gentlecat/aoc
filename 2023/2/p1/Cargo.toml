@@ -1,0 +1,11 @@
+[package]
+name = "aoc-2023-2-p1"
+version = "1.0.0"
+edition = "2021"
+
+[[bin]]
+name = "aoc-2023-2-p1"
+path = "main.rs"
+
+[dependencies]
+regex = "1.10.2"
