@@ -1,0 +1,55 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+
+  rust:
+    # Every solution is its own crate, so loop over the manifests. A shared
+    # target dir lets them reuse compiled dependencies.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CARGO_TARGET_DIR: /tmp/target
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Build
+        run: for m in $(find . -name Cargo.toml -not -path './puller/*' | sort); do echo "::group::$m"; cargo build --manifest-path "$m"; echo "::endgroup::"; done
+
+      - name: Test
+        run: for m in $(find . -name Cargo.toml -not -path './puller/*' | sort); do echo "::group::$m"; cargo test --manifest-path "$m"; echo "::endgroup::"; done
+
+      # Plain clippy fails only on deny-level lints. Warnings don't fail the
+      # job yet because the existing solutions have plenty of them.
+      - name: Clippy
+        run: for m in $(find . -name Cargo.toml -not -path './puller/*' | sort); do echo "::group::$m"; cargo clippy --manifest-path "$m"; echo "::endgroup::"; done
+
+  puller:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: puller/go.mod
+
+      - name: Build
+        working-directory: puller
+        run: |
+          go vet ./...
+          go build ./...
