@@ -8,5 +8,5 @@ name = "aoc-2023-3-p1"
 path = "main.rs"
 
 [dependencies]
-colored = "2.0.4"
+colored = "3.0.0"
 regex = "1.10.2"
